@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GitHub Issue Radar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #cf222e;
+      --yellow: #9a6700;
+      --green: #1a7f37;
+      --border: #d0d7de;
+      --text: #1f2328;
+      --muted: #656d76;
+      --bg: #f6f8fa;
+      --surface: #ffffff;
+      --mono: 'JetBrains Mono', monospace;
+      --ui: 'Syne', sans-serif;
+    }
+
+    body {
+      width: 320px;
+      background: var(--bg);
+      font-family: var(--ui);
+      color: var(--text);
+    }
+
+    /* Header */
+    .header {
+      background: #1c2026;
+      padding: 16px 18px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .traffic-light {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      background: #111;
+      padding: 5px 4px;
+      border-radius: 16px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.r { background: #ff5f57; box-shadow: 0 0 5px rgba(255,95,87,0.5); }
+    .dot.y { background: #febc2e; box-shadow: 0 0 5px rgba(254,188,46,0.5); }
+    .dot.g { background: #28c840; box-shadow: 0 0 5px rgba(40,200,64,0.5); }
+
+    .header-text h1 {
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    .header-text p {
+      font-size: 10px;
+      color: #848d97;
+      font-family: var(--mono);
+      margin-top: 2px;
+    }
+
+    /* Content */
+    .content { padding: 14px; }
+
+    .section-title {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    /* PAT Input */
+    .pat-wrap {
+      position: relative;
+      margin-bottom: 4px;
+    }
+
+    .pat-wrap input {
+      width: 100%;
+      padding: 8px 36px 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-size: 12px;
+      font-family: var(--mono);
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .pat-wrap input:focus { border-color: #0969da; box-shadow: 0 0 0 3px rgba(9,105,218,0.1); }
+
+    .eye-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--muted);
+      padding: 2px;
+    }
+
+    .hint {
+      font-size: 10.5px;
+      color: var(--muted);
+      font-family: var(--mono);
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+
+    .hint a { color: #0969da; text-decoration: none; }
+    .hint a:hover { text-decoration: underline; }
+
+    /* Feature toggles */
+    .feature-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 12px;
+    }
+
+    .feature-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: background 0.1s;
+    }
+    .feature-row:hover { background: #f0f3f6; }
+
+    .feature-name {
+      font-size: 12px;
+      font-weight: 600;
+      flex: 1;
+    }
+    .feature-desc {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--mono);
+    }
+
+    /* Toggle switch */
+    .toggle {
+      position: relative;
+      width: 32px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: #d0d7de;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle input:checked + .toggle-track { background: #1a7f37; }
+    .toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      pointer-events: none;
+    }
+    .toggle input:checked ~ .toggle-thumb { transform: translateX(14px); }
+
+    /* Save button */
+    .save-btn {
+      width: 100%;
+      padding: 9px;
+      background: #1a7f37;
+      color: white;
+      border: none;
+      border-radius: 7px;
+      font-family: var(--ui);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: -0.01em;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .save-btn:hover { background: #16692e; }
+    .save-btn:active { transform: scale(0.98); }
+    .save-btn.saved { background: #0969da; }
+
+    /* Status bar */
+    .status-bar {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 8px 14px;
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="traffic-light">
+    <div class="dot r"></div>
+    <div class="dot y"></div>
+    <div class="dot g"></div>
+  </div>
+  <div class="header-text">
+    <h1>GitHub Issue Radar</h1>
+    <p>v2.0.0 · avoid duplicate work</p>
+  </div>
+</div>
+
+<div class="content">
+
+  <div class="section-title">GitHub Personal Access Token</div>
+  <div class="pat-wrap">
+    <input type="password" id="pat-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"/>
+    <button class="eye-btn" id="eye-btn" title="Show/hide token">👁</button>
+  </div>
+  <p class="hint">
+    Optional but recommended. Without a PAT, the GitHub API only allows 60 requests/hour.
+    <a href="https://github.com/settings/tokens/new?scopes=public_repo&description=GitHub+Issue+Radar" target="_blank">Generate token →</a>
+    (only needs <code>public_repo</code> scope)
+  </p>
+
+  <div class="divider"></div>
+
+  <div class="section-title" style="margin-bottom:8px">Active Features</div>
+  <div class="feature-grid">
+    <div class="feature-row">
+      <div>
+        <div class="feature-name">🛑 PR Detection</div>
+        <div class="feature-desc">Sidebar + API deep scan</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="feat-pr" checked/>
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>
+    <div class="feature-row">
+      <div>
+        <div class="feature-name">⚠️ Stale Claim Detection</div>
+        <div class="feature-desc">Comment keyword analysis</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="feat-claims" checked/>
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>
+    <div class="feature-row">
+      <div>
+        <div class="feature-name">📊 Momentum Score</div>
+        <div class="feature-desc">Issue velocity & maintainer activity</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="feat-momentum" checked/>
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>
+    <div class="feature-row">
+      <div>
+        <div class="feature-name">🍴 Fork Activity Scanner</div>
+        <div class="feature-desc">Work happening outside this repo</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="feat-forks" checked/>
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>
+    <div class="feature-row">
+      <div>
+        <div class="feature-name">👤 Assignee Workload</div>
+        <div class="feature-desc">How many PRs does the assignee have open?</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="feat-workload" checked/>
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+    </div>
+  </div>
+
+  <button class="save-btn" id="save-btn">Save Settings</button>
+</div>
+
+<div class="status-bar">
+  <span id="status-text">Ready</span>
+  <span>github.com/issues only</span>
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>
