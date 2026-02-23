@@ -22,5 +22,4 @@ GitHub Issue Radar is a Chrome Extension that adds a status banner and analytics
 3. Choose which features to enable.
 4. Click “Save Settings”.
 
-### License
-MIT
+
